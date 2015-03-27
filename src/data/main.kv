@@ -1,0 +1,91 @@
+<MoodTrackerLayout>:
+    orientation: 'vertical'
+    spacing: 2
+    padding: 2
+    BoxLayout:
+        orientation: 'horizontal'
+
+        spacing: 2
+        padding: 2
+        Image:
+            size_hint_x: None
+            width: self.height
+            texture: root.texture if root.texture else None
+
+        BoxLayout:
+            orientation: 'vertical'
+            spacing: 2
+            padding: 0
+            Label:
+                text: 'Happy'
+                font_size: 10
+                text_size: self.size
+                padding: 5, 2
+                canvas.before:
+                    Color:
+                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+
+            Label:
+                text: 'Angry'
+                font_size: 10
+                text_size: self.size
+                padding: 5, 2
+                canvas.before:
+                    Color:
+                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                text: 'Disgust'
+                font_size: 10
+                text_size: self.size
+                padding: 5, 2
+                canvas.before:
+                    Color:
+                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                text: 'Sadness'
+                font_size: 10
+                text_size: self.size
+                padding: 5, 2
+                canvas.before:
+                    Color:
+                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Label:
+                text: 'Surprise'
+                font_size: 10
+                text_size: self.size
+                padding: 5, 2
+                canvas.before:
+                    Color:
+                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+        BoxLayout:
+            orientation: 'vertical'
+
+            Button:
+                text: 'Settings'
+
+            Button:
+                text: 'Start/Stop'
+
+            Button:
+                text: 'Teach'
+    Label:
+        text: 'Status:'
+        text_size: self.size
+        padding: 5, 2
+        font_size: 12
+        valign: 'top'
