@@ -14,9 +14,9 @@ MoodTracker.Popup.Index = MoodTracker.BaseClass.extend({
 
         this._background = chrome.extension.getBackgroundPage();
         this._main = this._background.MoodTracker.Background.Main;
-        this._$chart = this._createChart();
+        //this._$chart = this._createChart();
 
-        this._refresh(this._updateChart, this._main.config.performance.popupChartUpdateFrequency);
+        //this._refresh(this._updateChart, this._main.config.performance.popupChartUpdateFrequency);
         this._onUserMoodChange();
         this._onUserPortraitChange();
 
