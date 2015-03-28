@@ -8,6 +8,6 @@ MoodTracker.Background.Config = {
     performance: {
         moodUpdateFrequency: 3000,
         userPictureUpdateFrequency: 3000,
-        popupChartUpdateFrequency: 200
+        popupChartUpdateFrequency: 400
     }
 }
