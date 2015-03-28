@@ -1,15 +1,31 @@
-﻿
-
-<div style="width:400px">
-    <img id="UserPicture" />
+﻿<div class="mt-popup">
+    <div class="popup-header-box popup-title">Mood Checker</div>
+    <div class="popup-chart-box">
+        <label>&nbsp;</label>
+        <span class="popup-hill-top"></span>
+        <span class="popup-textStatus"></span>
+        <!--<span class="popup-valueStatus"></span>-->
+        <div id="chartContainer" class="popup-chart" style="height: 280px; width: 100%;"></div>
+        <span class="popup-hill"></span>
+    </div>
+    <div class="popup-metrics-box">
+        <ul>
+            <li id="PieChartSurprise" class="chart" data-percent="0">0%</li>
+            <li id="PieChartHappy" class="chart" data-percent="0">0%</li>
+            <li id="PieChartNormal" class="chart" data-percent="0">0%</li>
+            <li id="PieChartSadness" class="chart chart-margin" data-percent="0">0%</li>
+            <li id="PieChartDisgust" class="chart" data-percent="0">0%</li>
+        </ul>
+    </div>
 </div>
 
-<div id="areaChart" style="width: 800px; height: 200px"></div>
-
-
 <link rel="stylesheet" href="/content/styles/epoch/epoch.min.css">
+<link rel="stylesheet" href="/content/styles/easypiechart/easypiechart.css">
+<link rel="stylesheet" href="/content/styles/mt-popup.css">
 <script type="text/javascript" src="/scripts/thirdPartyScripts/jQuery/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="/scripts/core/infrastructure/moodTracker.js"></script>
 <script type="text/javascript" src="/scripts/core/infrastructure/moodTracker.baseClass.js"></script>
 <script type="text/javascript" src="/scripts/thirdPartyScripts/jQueryCharts/jquery.canvasjs.min.js"></script>
+<script type="text/javascript" src="/scripts/thirdPartyScripts/jQueryCharts/jquery.easypiechart.min.js"></script>
+
 <script type="text/javascript" src="/scripts/pages/popup/popup.js"></script>

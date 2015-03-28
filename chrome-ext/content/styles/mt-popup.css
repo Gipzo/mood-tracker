@@ -1,0 +1,117 @@
+﻿body {  margin:0; padding:0; }
+
+.mt-popup {
+    background-color: black;
+    height: 550px;
+    margin:0;
+    overflow: hidden;
+    padding:0;
+    width:330px;
+}
+
+.popup-header-box {
+    padding-right: 1.5em;
+    color: white;
+    font-size: 14px;
+    height: 30px;
+    line-height: 50px;
+    text-align: right;
+}
+
+.popup-chart-box {
+    background-color: white;
+    height:240px;
+    overflow:hidden;
+    position: relative;
+    width: 100%;
+}
+
+.popup-chart-box > label {
+    background-image: url("../images/topGrayscaleCover.png");
+    background-repeat: repeat-x;
+    display: block;
+    height: 280px;
+    left: 0;
+    position: absolute;
+    top: 0;
+    width: 100%;
+}
+
+
+.popup-chart-box .popup-textStatus{
+    font-size: 30px;
+    font-weight: bold;
+    position: absolute;
+    left: 30px;
+    top: 155px;
+    text-transform:uppercase;
+}
+
+.popup-chart-box .popup-valueStatus{
+    font-size: 20px;
+    font-weight: bold;
+    position: absolute;
+    left: 240px;
+    top: 50px;
+    text-transform:uppercase;
+}
+
+.popup-chart-box .popup-chart {
+    position: absolute;
+    width: 400px!important;
+    height: 290px;
+    left: -40px;
+    bottom: -40px;
+}
+
+.popup-chart-box .popup-hill-top{
+    position: absolute;
+    top:0;
+    background-image: url("../images/hill-vert.png");
+    width:100%;
+    height: 25px;
+    display: block;
+}
+
+.popup-chart-box .popup-hill{
+    position: absolute;
+    bottom:0;
+    background-image: url("../images/hill.png");
+    width:100%;
+    height: 25px;
+    display: block;
+}
+
+.popup-metrics-box{
+    padding-top: 40px;
+    overflow: auto;
+}
+
+.popup-metrics-box ul {
+    width: 300px;
+    overflow: auto;
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    margin: 0 auto;
+}
+
+/* Overwrite default pie chart style*/
+.popup-metrics-box ul > li {
+     color: white;
+     height: 80px;
+     width: 80px;
+     position: relative;
+     text-align: center;
+     line-height: 80px;
+}
+
+.popup-metrics-box ul > li.chart-margin {
+     margin-left: 59px;
+}
+
+.popup-metrics-box .chart canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
