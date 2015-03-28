@@ -1,0 +1,34 @@
+﻿{
+	"name": "MoodTrackerExtension",
+    "version": "0.0.1",
+    "manifest_version": 2,
+	"icons": { "64": "content/images/64x64.png" },
+    "background": {
+        "scripts": [
+			"scripts/thirdPartyScripts/jQuery/jquery-1.9.1.min.js",
+			"scripts/core/infrastructure/moodTracker.js",
+			"scripts/core/infrastructure/moodTracker.baseClass.js",
+			"config.js", 
+			"scripts/core/background/background.messenger.js",
+			"scripts/core/background/background.moodInterface.js",
+			"scripts/core/background/background.js"
+		],
+		"persistent": false
+    },
+	"browser_action": {
+        "default_icon": { "64": "content/images/64x64.png" },
+        "default_title": "Mood Tracker",
+        "default_popup": "pages/popup/popup.html"
+    },
+	"permissions": [
+		"activeTab",
+		"http://*/",
+		"http://ip.jsontest.com/?callback=showMyIP"
+	],
+	"content_scripts": [
+		{
+		  "matches": ["http://www.onliner.by/*"],
+		  "js": ["scripts/thirdPartyScripts/jQuery/jquery-1.9.1.min.js", "scripts/injection/moodTrackerListener.js"]
+		}
+   ]
+}
