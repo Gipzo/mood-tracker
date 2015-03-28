@@ -2,12 +2,12 @@
 
 MoodTracker.Background.Config = {
     urls: {
-        moodDataSource: 'http://10.168.1.50:8080/',
-        userPicture: 'http://10.168.1.50:8080/image'
+        moodDataSource: 'http://127.0.0.1:8080/',
+        userPicture: 'http://127.0.0.1:8080/image'
     },
     performance: {
         moodUpdateFrequency: 3000,
-        userPictureUpdateFrequency: 3000,
+        userPictureUpdateFrequency: 1000,
         popupChartUpdateFrequency: 200
     }
 }

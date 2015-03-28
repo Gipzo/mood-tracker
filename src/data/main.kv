@@ -86,16 +86,9 @@
                         size: self.size[0]*(root.main_mood_val+1.0)/2.0, self.size[1]
         BoxLayout:
             orientation: 'vertical'
-
-            Button:
-                text: 'Start/Stop'
-
             Button:
                 text: 'Teach'
                 on_press: root.set_to_learning()
-            Button:
-                text: 'Detect face'
-                on_press: root.detect_face = not root.detect_face
     Label:
         text: 'Status: ' + root.status
         text_size: self.size

@@ -58,7 +58,7 @@ class MoodInfo(resource.Resource):
             data = {
                 'detected_mood': self.moodTrackerLayout.detected_mood,
                 'current_mood': self.moodTrackerLayout.current_mood,
-                'main_mood': self.moodTrackerLayout.main_mood,
+                'main_mood': (self.moodTrackerLayout.main_mood+1.0)/2.0,
                 'mood_coef': {
                     'happy': self.moodTrackerLayout.mood_stat['happy'],
                     'disgust': self.moodTrackerLayout.mood_stat['disgust'],

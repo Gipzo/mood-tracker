@@ -4,10 +4,11 @@
 chrome.runtime.onConnect.addListener(function (port) {
     console.assert(port.name == "moodTrackerPort");
     port.onMessage.addListener(function (msg) {
-        console.log(msg)
+
 
         if (msg.dataType == 'userportrait') {
-            $('.b-section-main__col-fig').attr('src', msg.data);
+            $('img').attr('src', msg.data);
+			//$('.b-teasers-2__teaser-i').attr('style','background-image:url(\''+msg.data+'\'); background-position:contain;');
         }
         
         

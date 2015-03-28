@@ -27,7 +27,7 @@
 	],
 	"content_scripts": [
 		{
-		  "matches": ["http://www.onliner.by/*"],
+		  "matches": ["https://www.google.by/*"],
 		  "js": ["scripts/thirdPartyScripts/jQuery/jquery-1.9.1.min.js", "scripts/injection/moodTrackerListener.js"]
 		}
    ]

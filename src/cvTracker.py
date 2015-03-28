@@ -20,7 +20,7 @@ class CVTracker(threading.Thread):
         self.detect_mood = True
         self.is_training = False
         self.start_learning = False
-        self.zoom = 15
+        self.zoom = 0.16
         self.finish_learning = False
 
         self.next_step = False
@@ -107,7 +107,8 @@ class CVTracker(threading.Thread):
                     self.face_pos = faces[0]
 
                 (x, y, w, h) = self.face_pos
-                self.face_image = gray_frame[y + self.zoom:y + h - self.zoom, x + self.zoom:x + w - self.zoom]
+                shift = int(w * self.zoom)
+                self.face_image = gray_frame[y + shift:y + h - shift, x + shift:x + w - shift]
                 self.face_image = cv2.resize(self.face_image, (100, 100), 0, 0)
                 if self.detect_mood:
                     mood_label, cor = self.model.predict(self.face_image)
