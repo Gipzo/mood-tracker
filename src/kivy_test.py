@@ -4,6 +4,7 @@ import json
 import os
 
 from kivy.support import install_twisted_reactor
+from cvTracker import CVTracker
 
 install_twisted_reactor()
 
@@ -23,9 +24,10 @@ from twisted.web import server, resource
 import sys
 import shutil
 
+Builder.load_file('data/main.kv')
+
 Config.set('graphics', 'width', '500')
 Config.set('graphics', 'height', '200')
-Builder.load_file('data/main.kv')
 
 
 class Simple(resource.Resource):
@@ -48,41 +50,6 @@ class Simple(resource.Resource):
             }
             return json.dumps({'data': data}, ensure_ascii=False, indent=2)
         return "{'data':false}"
-
-
-def read_images(path, sz=None):
-    """Reads the images in a given folder, resizes images on the fly if size is given.
-
-    Args:
-        path: Path to a folder with subfolders representing the subjects (persons).
-        sz: A tuple with the size Resizes
-
-    Returns:
-        A list [X,y]
-
-            X: The images, which is a Python list of numpy arrays.
-            y: The corresponding labels (the unique number of the subject, person) in a Python list.
-    """
-    c = 0
-    X, y = [], []
-    for dirname, dirnames, filenames in os.walk(path):
-        for subdirname in dirnames:
-            subject_path = os.path.join(dirname, subdirname)
-            for filename in os.listdir(subject_path):
-                try:
-                    im = cv2.imread(os.path.join(subject_path, filename), cv2.IMREAD_GRAYSCALE)
-                    # resize to given size (if given)
-                    if (sz is not None):
-                        im = cv2.resize(im, sz)
-                    X.append(np.asarray(im, dtype=np.uint8))
-                    y.append(c)
-                except IOError, (errno, strerror):
-                    print "I/O error({0}): {1}".format(errno, strerror)
-                except:
-                    print "Unexpected error:", sys.exc_info()[0]
-                    raise
-            c = c + 1
-    return [X, y]
 
 
 class MoodTrackerLayout(BoxLayout):
@@ -128,40 +95,36 @@ class MoodTrackerLayout(BoxLayout):
     # frame_scale = [0.25, 0.25]
     frame_scale = [1.0, 1.0]
 
-    mood_conv = {'1': 'disgust', '0': 'happy', '3': 'surprise', '2': 'sadness', '4': 'normal'}
-
     current_mood = StringProperty("normal")
     detected_mood = StringProperty("normal")
 
     def __init__(self, **kwargs):
         super(MoodTrackerLayout, self).__init__(**kwargs)
-        self.face_image = None
+
+        self.cvTracker = CVTracker(layout=self)
+        if self.cvTracker.model_trained:
+            self.state = 'running'
+        self.texture_buf=""
         res = Simple()
         res.moodTrackerLayout = self
         site = server.Site(res)
         reactor.listenTCP(8080, site)
-        self.model = cv2.createEigenFaceRecognizer()
-        if os.path.isfile('data/model.xml'):
-            self.model.load('data/model.xml')
-            self.state = 'running'
-        self.vc = cv2.VideoCapture(0)
         self.texture = Texture.create(size=(100, 100), colorfmt='luminance')
-        self.faceCascade = cv2.CascadeClassifier("data/haarcascade_frontalface_alt.xml")
         Clock.schedule_interval(self.update, 1.0 / 33.0)
+        Window.size = (500, 200)
         keyboard = Window.request_keyboard(self._keyboard_released, self)
         self._keyboard = keyboard
         keyboard.bind(on_key_down=self._keyboard_on_key_down)
+
+        self.cvTracker.start()
+
 
     def _keyboard_released(self):
         self.focus = False
 
     def set_to_learning(self, *largs):
-        shutil.rmtree('learning_data/')
-        os.mkdir('learning_data/')
-        for mood in self.moods:
-            os.mkdir('learning_data/{}'.format(mood))
+        self.cvTracker.init_learning()
         self.state = 'learning'
-        self.face_found = False
 
     def _keyboard_on_key_down(self, key, scancode, codepoint, modifier):
         code, key = scancode
@@ -177,6 +140,7 @@ class MoodTrackerLayout(BoxLayout):
         if key == '5':
             self.current_mood = 'normal'
         if key == 'escape' and self.state is not 'learning':
+            self.cvTracker.running = False
             App.get_running_app().stop()
 
         if key == 'escape' and self.state == 'learning':
@@ -222,39 +186,18 @@ class MoodTrackerLayout(BoxLayout):
 
         self.status = "Detected mood - {}, [{}]".format(self.detected_mood, self.current_mood)
 
-    def update_cv(self, dt):
-        rval, frame = self.vc.read()
-        gray_frame = cv2.cvtColor(frame, cv2.cv.CV_BGR2GRAY)
-        gray_frame = cv2.resize(gray_frame, (0, 0), fx=self.frame_scale[0], fy=self.frame_scale[1])
-        faces = self.faceCascade.detectMultiScale(
-            gray_frame,
-            scaleFactor=1.05,
-            minNeighbors=4,
-            minSize=(30, 30),
-            flags=cv2.cv.CV_HAAR_SCALE_IMAGE
-        )
-        if len(faces) > 0:
-
-            if self.detect_face:
-                self.face_pos = faces[0]
-
-            (x, y, w, h) = self.face_pos
-            self.face_image = gray_frame[y:y + h, x:x + w]
-            self.face_image = cv2.resize(self.face_image, (100, 100), 0, 0)
-            if self.state == 'running':
-                mood_label, cor = self.model.predict(self.face_image)
-                self.current_mood = self.mood_conv[str(mood_label)]
-            buf1 = cv2.flip(self.face_image, 0)
-            buf = buf1.tostring()
-            self.texture = Texture.create(size=(100, 100), colorfmt='luminance')
-            self.texture.blit_buffer(buf, colorfmt='luminance', bufferfmt='ubyte')
-
     def learning_next_step(self):
         ind = self.moods.index(self.current_mood) + 1
         if ind >= len(self.moods):
             self.current_mood = self.moods[0]
         else:
             self.current_mood = self.moods[ind]
+
+    def set_texture(self, buf, *largs):
+        self.texture_buf = buf
+
+    def set_current_mood(self, mood, *largs):
+        self.current_mood = mood
 
     def update_learning(self, dt):
         self.status = "Learning: {}, Press S to save photo. Escape to stop learning.".format(self.current_mood)
@@ -276,9 +219,7 @@ class MoodTrackerLayout(BoxLayout):
                 if f[-3:] != 'jpg':
                     continue
                 filename = "learning_data/{}/{}".format(mood, f)
-                # CropFace(Image.open(filename), eye_left=(252,364), eye_right=(420,366), offset_pct=(0.1,0.1), dest_sz=(100,100)).save(filename)
                 im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-                # resize to given size (if given)
                 images.append(np.asarray(im, dtype=np.uint8))
                 labels.append(i)
                 self.mood_conv[str(i)] = mood
@@ -291,7 +232,9 @@ class MoodTrackerLayout(BoxLayout):
 
 
     def update(self, dt):
-        self.update_cv(dt)
+
+        self.texture = Texture.create(size=(100, 100), colorfmt='luminance')
+        self.texture.blit_buffer(self.texture_buf, colorfmt='luminance', bufferfmt='ubyte')
         if self.state == 'running':
             self.frame_scale = [0.25, 0.25]
             self.update_vals(dt)
