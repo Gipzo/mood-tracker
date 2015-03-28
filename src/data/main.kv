@@ -9,6 +9,7 @@
         padding: 2
         Image:
             size_hint_x: None
+            allow_stretch: True
             width: self.height
             texture: root.texture if root.texture else None
 
@@ -16,6 +17,17 @@
             orientation: 'vertical'
             spacing: 2
             padding: 0
+            Label:
+                text: 'Normal'
+                font_size: 10
+                text_size: self.size
+                padding: 5, 2
+                canvas.before:
+                    Color:
+                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size[0]*root.normal_val, self.size[1]
             Label:
                 text: 'Happy'
                 font_size: 10
@@ -26,19 +38,8 @@
                         rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
                     Rectangle:
                         pos: self.pos
-                        size: self.size
+                        size: self.size[0]*root.happy_val, self.size[1]
 
-            Label:
-                text: 'Angry'
-                font_size: 10
-                text_size: self.size
-                padding: 5, 2
-                canvas.before:
-                    Color:
-                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
-                    Rectangle:
-                        pos: self.pos
-                        size: self.size
             Label:
                 text: 'Disgust'
                 font_size: 10
@@ -49,7 +50,7 @@
                         rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
                     Rectangle:
                         pos: self.pos
-                        size: self.size
+                        size: self.size[0]*root.disgust_val, self.size[1]
             Label:
                 text: 'Sadness'
                 font_size: 10
@@ -60,7 +61,7 @@
                         rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
                     Rectangle:
                         pos: self.pos
-                        size: self.size
+                        size: self.size[0]*root.sadness_val, self.size[1]
             Label:
                 text: 'Surprise'
                 font_size: 10
@@ -71,7 +72,7 @@
                         rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
                     Rectangle:
                         pos: self.pos
-                        size: self.size
+                        size: self.size[0]*root.surprise_val, self.size[1]
         BoxLayout:
             orientation: 'vertical'
 
@@ -83,8 +84,12 @@
 
             Button:
                 text: 'Teach'
+                on_press: root.set_to_learning()
+            Button:
+                text: 'Detect face'
+                on_press: root.detect_face = not root.detect_face
     Label:
-        text: 'Status:'
+        text: 'Status: ' + root.status
         text_size: self.size
         padding: 5, 2
         font_size: 12
