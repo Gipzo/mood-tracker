@@ -16,6 +16,7 @@ lib64/
 parts/
 sdist/
 var/
+src/learning_data/
 *.egg-info/
 .installed.cfg
 *.egg
