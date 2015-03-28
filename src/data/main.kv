@@ -73,11 +73,19 @@
                     Rectangle:
                         pos: self.pos
                         size: self.size[0]*root.surprise_val, self.size[1]
+            Label:
+                text: 'Main mood'
+                font_size: 10
+                text_size: self.size
+                padding: 5, 2
+                canvas.before:
+                    Color:
+                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size[0]*(root.main_mood_val+1.0)/2.0, self.size[1]
         BoxLayout:
             orientation: 'vertical'
-
-            Button:
-                text: 'Settings'
 
             Button:
                 text: 'Start/Stop'

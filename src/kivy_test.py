@@ -2,6 +2,8 @@
 import glob
 import json
 import os
+from PIL import Image
+import StringIO
 
 from kivy.support import install_twisted_reactor
 from cvTracker import CVTracker
@@ -30,16 +32,33 @@ Config.set('graphics', 'width', '500')
 Config.set('graphics', 'height', '200')
 
 
-class Simple(resource.Resource):
+class MoodInfo(resource.Resource):
     isLeaf = True
     moodTrackerLayout = None
 
+    def getChild(self, name, request):
+        if name == '':
+            return self
+        return self.getChild(self, name, request)
+
     def render_GET(self, request):
+        if request.uri[:6] == '/image':
+            # return 'fail'
+            request.setHeader("content-type", "image/jpeg")
+            img = Image.frombuffer('L', (100, 100), self.moodTrackerLayout.texture_buf)
+            output = StringIO.StringIO()
+            img.save(output, format="JPEG")
+
+            contents = output.getvalue()
+            output.close()
+            return contents
+
         request.setHeader("content-type", "application/json")
         if self.moodTrackerLayout is not None:
             data = {
                 'detected_mood': self.moodTrackerLayout.detected_mood,
                 'current_mood': self.moodTrackerLayout.current_mood,
+                'main_mood': self.moodTrackerLayout.main_mood,
                 'mood_coef': {
                     'happy': self.moodTrackerLayout.mood_stat['happy'],
                     'disgust': self.moodTrackerLayout.mood_stat['disgust'],
@@ -49,7 +68,7 @@ class Simple(resource.Resource):
                 }
             }
             return json.dumps({'data': data}, ensure_ascii=False, indent=2)
-        return "{'data':false}"
+        return "{'data':false }"
 
 
 class MoodTrackerLayout(BoxLayout):
@@ -60,6 +79,7 @@ class MoodTrackerLayout(BoxLayout):
     sadness_val = NumericProperty(0.75)
     surprise_val = NumericProperty(1.0)
     normal_val = NumericProperty(1.0)
+    main_mood_val = NumericProperty(0.0)
 
     moods = ['happy', 'disgust', 'sadness', 'surprise', 'normal']
     mood_stat = {'happy': 0.0,
@@ -74,17 +94,25 @@ class MoodTrackerLayout(BoxLayout):
                 'surprise': 0.0,
                 'normal': 0.0}
 
-    mood_coef_inc = {'happy': 0.6,
-                     'disgust': 0.6,
-                     'sadness': 0.4,
-                     'surprise': 1.0,
-                     'normal': 0.6}
+    mood_coef_inc = {'happy': 0.3,
+                     'disgust': 0.3,
+                     'sadness': 0.2,
+                     'surprise': 0.5,
+                     'normal': 0.5}
 
     mood_coef_dec = {'happy': 0.5,
                      'disgust': 0.5,
                      'sadness': 0.5,
                      'surprise': 0.5,
-                     'normal': 0.2}
+                     'normal': 0.08}
+
+    mood_main_coef = {'happy': 0.125,
+                      'disgust': -0.25,
+                      'sadness': -0.125,
+                      'surprise': 0.25,
+                      'normal': 0.025}
+
+    main_mood = 0.0
 
     face_pos = [0, 0, 0, 0]
     detect_face = BooleanProperty(True)
@@ -102,10 +130,11 @@ class MoodTrackerLayout(BoxLayout):
         super(MoodTrackerLayout, self).__init__(**kwargs)
 
         self.cvTracker = CVTracker(layout=self)
+        self.cvTracker.moods = self.moods
         if self.cvTracker.model_trained:
             self.state = 'running'
-        self.texture_buf=""
-        res = Simple()
+        self.texture_buf = ""
+        res = MoodInfo()
         res.moodTrackerLayout = self
         site = server.Site(res)
         reactor.listenTCP(8080, site)
@@ -123,12 +152,11 @@ class MoodTrackerLayout(BoxLayout):
         self.focus = False
 
     def set_to_learning(self, *largs):
-        self.cvTracker.init_learning()
+        self.cvTracker.start_learning = True
         self.state = 'learning'
 
     def _keyboard_on_key_down(self, key, scancode, codepoint, modifier):
         code, key = scancode
-        print key
         if key == '1':
             self.current_mood = 'happy'
         if key == '2':
@@ -145,11 +173,24 @@ class MoodTrackerLayout(BoxLayout):
 
         if key == 'escape' and self.state == 'learning':
             self.stop_learning()
+
         if key == 'spacebar' and self.state == 'learning':
             self.learning_next_step()
+
         if key == 's' and self.state == 'learning':
             self.learning_save_photo()
+
         return True
+
+    def stop_learning(self):
+        self.cvTracker.finish_learning = True
+        self.state = 'running'
+
+    def learning_next_step(self):
+        self.cvTracker.next_step = True
+
+    def learning_save_photo(self):
+        self.cvTracker.learning_save_photo = True
 
     def update_vals(self, dt):
         increase = 0.09
@@ -183,15 +224,20 @@ class MoodTrackerLayout(BoxLayout):
             if v > max:
                 max = v
                 self.detected_mood = m
-
+        if self.detected_mood is not 'normal':
+            self.main_mood += dt * self.mood_main_coef[self.detected_mood]
+        else:
+            if self.main_mood < 0:
+                self.main_mood += dt * self.mood_main_coef['normal']
+            else:
+                self.main_mood -= dt * self.mood_main_coef['normal']
+        if self.main_mood < -1.0:
+            self.main_mood = -1.0
+        if self.main_mood > 1.0:
+            self.main_mood = 1.0
+        self.main_mood_val = self.main_mood
         self.status = "Detected mood - {}, [{}]".format(self.detected_mood, self.current_mood)
 
-    def learning_next_step(self):
-        ind = self.moods.index(self.current_mood) + 1
-        if ind >= len(self.moods):
-            self.current_mood = self.moods[0]
-        else:
-            self.current_mood = self.moods[ind]
 
     def set_texture(self, buf, *largs):
         self.texture_buf = buf
@@ -201,35 +247,6 @@ class MoodTrackerLayout(BoxLayout):
 
     def update_learning(self, dt):
         self.status = "Learning: {}, Press S to save photo. Escape to stop learning.".format(self.current_mood)
-
-    def learning_save_photo(self):
-        if self.face_image is not None:
-            file_name = len(glob.glob('learning_data/{}/*.jpg'.format(self.current_mood))) + 1
-            cv2.imwrite("learning_data/{}/{}.jpg".format(self.current_mood, file_name), self.face_image)
-        pass
-
-    def stop_learning(self):
-        images = []
-        labels = []
-        i = 0
-        for mood in self.moods:
-            onlyfiles = [f for f in os.listdir("learning_data/{}/".format(mood)) if
-                         os.path.isfile(os.path.join("learning_data/{}/".format(mood), f))]
-            for f in onlyfiles:
-                if f[-3:] != 'jpg':
-                    continue
-                filename = "learning_data/{}/{}".format(mood, f)
-                im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
-                images.append(np.asarray(im, dtype=np.uint8))
-                labels.append(i)
-                self.mood_conv[str(i)] = mood
-            i += 1
-        labels = np.asarray(labels, dtype=np.int32)
-        self.model.train(images, labels)
-        self.model.save('data/model.xml')
-        print self.mood_conv
-        self.state = 'running'
-
 
     def update(self, dt):
 
