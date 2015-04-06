@@ -80,14 +80,16 @@
                 padding: 5, 2
                 canvas.before:
                     Color:
-                        rgba: 138/255.0, 197/255.0, 242/255.0, 0.7
+                        rgba: (38+(1-(root.main_mood_val+1.0)/2.0)*100)/255.0, (7+(root.main_mood_val+1.0)/2.0*190)/255.0, 242/255.0, 0.7
                     Rectangle:
                         pos: self.pos
                         size: self.size[0]*(root.main_mood_val+1.0)/2.0, self.size[1]
         BoxLayout:
             orientation: 'vertical'
+            size_hint_x: None
+            width: 45
             Button:
-                text: 'Teach'
+                text: 'T\ne\na\nc\nh'
                 on_press: root.set_to_learning()
     Label:
         text: 'Status: ' + root.status
@@ -97,3 +99,118 @@
         size_hint_y: None
         height:25
         valign: 'top'
+
+<LearningPopup>:
+    opacity:0.9
+	BoxLayout:
+	    orientation: 'vertical'
+		padding: 20
+		spacing:5
+	    Label:
+		    size_hint_y: None
+			height:35
+			text: 'Training classificator'
+			font_size: 20
+    	BoxLayout:
+		    orientation: 'horizontal'
+			spacing: 5
+	    	BoxLayout:
+			    canvas:
+				    Color:
+					    rgba: 1, 1, 1, 0.2 if root.current_emotion == 'normal' else 0.0
+				    Rectangle:
+					    pos: self.pos
+						size: self.size
+			    orientation: 'vertical'
+				spacing:3
+				opacity: 1.0 if root.current_emotion == 'normal' or root.trained_normal >= root.trained_min else 0.2
+				Image:
+				    color: [0, 1, 0, 1] if root.trained_normal >= root.trained_min else [1, 1, 1, 1]
+				    source: 'data/icons/normal.png'
+				Label:
+				    text: 'Normal {}'.format(root.trained_normal)
+	    	BoxLayout:
+			    canvas:
+				    Color:
+					    rgba: 1, 1, 1, 0.2 if root.current_emotion == 'happy' else 0.0
+				    Rectangle:
+					    pos: self.pos
+						size: self.size
+			    orientation: 'vertical'
+				spacing:3
+				opacity: 1.0 if root.current_emotion == 'happy' or root.trained_happy >= root.trained_min else 0.2
+				Image:
+				    color: [0, 1, 0, 1] if root.trained_happy >= root.trained_min else [1, 1, 1, 1]
+				    source: 'data/icons/happy.png'
+				Label:
+				    text: 'Happy {}'.format(root.trained_happy)
+	    	BoxLayout:
+			    canvas:
+				    Color:
+					    rgba: 1, 1, 1, 0.2 if root.current_emotion == 'disgust' else 0.0
+				    Rectangle:
+					    pos: self.pos
+						size: self.size
+			    orientation: 'vertical'
+				spacing:3
+				opacity: 1.0 if root.current_emotion == 'disgust' or root.trained_disgust >= root.trained_min  else 0.2
+				Image:
+				    color: [0, 1, 0, 1] if root.trained_disgust >= root.trained_min else [1, 1, 1, 1]
+				    source: 'data/icons/disgust.png'
+				Label:
+				    text: 'Disgust {}'.format(root.trained_disgust)
+	    	BoxLayout:
+			    canvas:
+				    Color:
+					    rgba: 1, 1, 1, 0.2 if root.current_emotion == 'sadness' else 0.0
+				    Rectangle:
+					    pos: self.pos
+						size: self.size
+			    orientation: 'vertical'
+				spacing:3
+				opacity: 1.0 if root.current_emotion == 'sadness' or root.trained_sadness >= root.trained_min  else 0.2
+				Image:
+				    color: [0, 1, 0, 1] if root.trained_sadness >= root.trained_min else [1, 1, 1, 1]
+				    source: 'data/icons/sadness.png'
+				Label:
+				    text: 'Sadness {}'.format(root.trained_sadness)
+	    	BoxLayout:
+			    canvas:
+				    Color:
+					    rgba: 1, 1, 1, 0.2 if root.current_emotion == 'surprise' else 0.0
+				    Rectangle:
+					    pos: self.pos
+						size: self.size
+			    orientation: 'vertical'
+				spacing:3
+				opacity: 1.0 if root.current_emotion == 'surprise' or root.trained_surprise >= root.trained_min  else 0.2
+				Image:
+				    color: [0, 1, 0, 1] if root.trained_surprise >= root.trained_min else [1, 1, 1, 1]
+				    source: 'data/icons/surprise.png'
+				Label:
+				    text: 'Surprise {}'.format(root.trained_surprise)
+
+		BoxLayout:
+		    orientaion: 'horizontal'
+			spacing: 5
+			size_hint_y:0.8
+	        Label:
+			    height:20
+			    text: 'Make face with current emotion and press Save. You must save at least 3 photos.\nWhen finished with one emotion, press Next.\nWhen all emotions are done, press Finish'
+			    font_size: 12
+				text_size: self.size
+			BoxLayout:
+			    orientation: 'horizontal'
+				spacing: 5
+				sine_hint_x: 0.2
+				Button:
+				    text: 'Save'
+					on_press: root.mood_tracker.learning_save_photo()
+				Button:
+				    text: 'Next'
+					on_press: root.mood_tracker.learning_next_step()
+				Button:
+				    disabled: True if root.trained_surprise < root.trained_min or root.trained_happy < root.trained_min or root.trained_normal < root.trained_min or root.trained_sadness < root.trained_min or root.trained_disgust < root.trained_min else False
+				    text: 'Finish'
+					on_press: root.mood_tracker.stop_learning()
+				   

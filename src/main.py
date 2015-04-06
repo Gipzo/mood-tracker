@@ -21,16 +21,13 @@ from kivy.graphics.texture import Texture
 from kivy.lang import Builder
 from kivy.properties import ObjectProperty, Clock, NumericProperty, StringProperty, BooleanProperty
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.modalview import ModalView
 from twisted.internet import reactor
 from twisted.web import server, resource
 import sys
 import shutil
 
 Builder.load_file('data/main.kv')
-
-Config.set('graphics', 'width', '500')
-Config.set('graphics', 'height', '200')
-
 
 class MoodInfo(resource.Resource):
     isLeaf = True
@@ -58,7 +55,7 @@ class MoodInfo(resource.Resource):
             data = {
                 'detected_mood': self.moodTrackerLayout.detected_mood,
                 'current_mood': self.moodTrackerLayout.current_mood,
-                'main_mood': (self.moodTrackerLayout.main_mood+1.0)/2.0,
+                'main_mood': (self.moodTrackerLayout.main_mood + 1.0) / 2.0,
                 'mood_coef': {
                     'happy': self.moodTrackerLayout.mood_stat['happy'],
                     'disgust': self.moodTrackerLayout.mood_stat['disgust'],
@@ -70,7 +67,17 @@ class MoodInfo(resource.Resource):
             return json.dumps({'data': data}, ensure_ascii=False, indent=2)
         return "{'data':false }"
 
-
+class LearningPopup(ModalView):
+    mood_tracker = ObjectProperty()
+    current_emotion = StringProperty('normal')
+    trained_min = NumericProperty(3)
+    trained_normal = NumericProperty(0)
+    trained_happy = NumericProperty(0)
+    trained_disgust = NumericProperty(0)
+    trained_sadness = NumericProperty(0)
+    trained_surprise = NumericProperty(0)
+    pass
+    
 class MoodTrackerLayout(BoxLayout):
     texture = ObjectProperty()
 
@@ -120,7 +127,6 @@ class MoodTrackerLayout(BoxLayout):
 
     state = StringProperty("learning")
 
-    # frame_scale = [0.25, 0.25]
     frame_scale = [1.0, 1.0]
 
     current_mood = StringProperty("normal")
@@ -140,11 +146,11 @@ class MoodTrackerLayout(BoxLayout):
         reactor.listenTCP(8080, site)
         self.texture = Texture.create(size=(100, 100), colorfmt='luminance')
         Clock.schedule_interval(self.update, 1.0 / 33.0)
-        Window.size = (500, 200)
+        Window.size = (800, 350)
         keyboard = Window.request_keyboard(self._keyboard_released, self)
         self._keyboard = keyboard
         keyboard.bind(on_key_down=self._keyboard_on_key_down)
-
+        self.learningPopup = LearningPopup(mood_tracker=self)
         self.cvTracker.start()
 
 
@@ -152,44 +158,44 @@ class MoodTrackerLayout(BoxLayout):
         self.focus = False
 
     def set_to_learning(self, *largs):
+        self.cvTracker.is_training = True
+        self.current_mood = 'normal'
         self.cvTracker.start_learning = True
         self.state = 'learning'
 
+        self.trained_normal = 0
+        self.trained_happy = 0
+        self.trained_disgust = 0
+        self.trained_sadness = 0
+        self.trained_surprise = 0
+        self.learningPopup.open()
+
     def _keyboard_on_key_down(self, key, scancode, codepoint, modifier):
         code, key = scancode
-        if key == '1':
-            self.current_mood = 'happy'
-        if key == '2':
-            self.current_mood = 'disgust'
-        if key == '3':
-            self.current_mood = 'sadness'
-        if key == '4':
-            self.current_mood = 'surprise'
-        if key == '5':
-            self.current_mood = 'normal'
         if key == 'escape' and self.state is not 'learning':
             self.cvTracker.running = False
             App.get_running_app().stop()
-
-        if key == 'escape' and self.state == 'learning':
-            self.stop_learning()
-
-        if key == 'spacebar' and self.state == 'learning':
-            self.learning_next_step()
-
-        if key == 's' and self.state == 'learning':
-            self.learning_save_photo()
-
         return True
 
     def stop_learning(self):
         self.cvTracker.finish_learning = True
+        self.learningPopup.dismiss()
         self.state = 'running'
 
     def learning_next_step(self):
         self.cvTracker.next_step = True
 
     def learning_save_photo(self):
+        if self.current_mood == 'happy':
+            self.learningPopup.trained_happy +=1
+        if self.current_mood == 'disgust':
+            self.learningPopup.trained_disgust +=1
+        if self.current_mood == 'sadness':
+            self.learningPopup.trained_sadness +=1
+        if self.current_mood == 'surprise':
+            self.learningPopup.trained_surprise +=1
+        if self.current_mood == 'normal':
+            self.learningPopup.trained_normal +=1
         self.cvTracker.learning_save_photo = True
 
     def update_vals(self, dt):
@@ -236,7 +242,6 @@ class MoodTrackerLayout(BoxLayout):
         if self.main_mood > 1.0:
             self.main_mood = 1.0
         self.main_mood_val = self.main_mood
-        self.status = "Detected mood - {}, [{}]".format(self.detected_mood, self.current_mood)
 
 
     def set_texture(self, buf, *largs):
@@ -245,9 +250,6 @@ class MoodTrackerLayout(BoxLayout):
     def set_current_mood(self, mood, *largs):
         self.current_mood = mood
 
-    def update_learning(self, dt):
-        self.status = "Learning: {}, Press S to save photo. Escape to stop learning.".format(self.current_mood)
-
     def update(self, dt):
 
         self.texture = Texture.create(size=(100, 100), colorfmt='luminance')
@@ -255,16 +257,17 @@ class MoodTrackerLayout(BoxLayout):
         if self.state == 'running':
             self.frame_scale = [0.25, 0.25]
             self.update_vals(dt)
+            self.status = "Detected mood - {}".format(self.detected_mood)
         if self.state == 'learning':
+            self.learningPopup.current_emotion = self.current_mood
             self.frame_scale = [0.5, 0.5]
-            self.update_learning(dt)
+            self.status = "Learning: {}, Press S to save photo. Escape to finish learning.".format(self.current_mood)
 
 
 class MoodTrackerApp(App):
     def build(self):
         self.layout = MoodTrackerLayout()
         return self.layout
-
 
 if __name__ == '__main__':
     MoodTrackerApp().run()

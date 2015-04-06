@@ -20,7 +20,7 @@ class CVTracker(threading.Thread):
         self.detect_mood = True
         self.is_training = False
         self.start_learning = False
-        self.zoom = 0.16
+        self.zoom = 0.1
         self.finish_learning = False
 
         self.next_step = False
@@ -92,7 +92,7 @@ class CVTracker(threading.Thread):
             rval, frame = self.vc.read()
             gray_frame = cv2.cvtColor(frame, cv2.cv.CV_BGR2GRAY)
             if self.is_training:
-                gray_frame = cv2.resize(gray_frame, (0, 0), fx=1.0, fy=1.0)
+                gray_frame = cv2.resize(gray_frame, (0, 0), fx=0.5, fy=0.5)
             else:
                 gray_frame = cv2.resize(gray_frame, (0, 0), fx=0.5, fy=0.5)
             faces = self.faceCascade.detectMultiScale(
@@ -110,7 +110,7 @@ class CVTracker(threading.Thread):
                 shift = int(w * self.zoom)
                 self.face_image = gray_frame[y + shift:y + h - shift, x + shift:x + w - shift]
                 self.face_image = cv2.resize(self.face_image, (100, 100), 0, 0)
-                if self.detect_mood:
+                if self.detect_mood and not self.is_training:
                     mood_label, cor = self.model.predict(self.face_image)
                     self.set_current_mood(self.mood_conv[str(mood_label)])
                 if self.is_training:
@@ -121,6 +121,7 @@ class CVTracker(threading.Thread):
                 if self.start_learning:
                     print 'Start {}'.format(self.current_mood)
                     self.start_learning = False
+                    self.is_training = True
                     self.init_learning()
 
                 if self.finish_learning:
