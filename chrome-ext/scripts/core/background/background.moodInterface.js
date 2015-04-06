@@ -13,7 +13,7 @@ MoodTracker.Background.MoodInterface = MoodTracker.BaseClass.extend({
 
     init: function (options) {
         MoodTracker.rebindFunctionInstances(this);
-
+		
         this._config = options.main.config;
         this._options = options;
 

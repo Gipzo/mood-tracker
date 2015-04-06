@@ -4,7 +4,7 @@ import urllib2
 import serial
 import struct
 URL = "http://127.0.0.1:8080/"
-ser = serial.Serial('/dev/tty.wchusbserial1420', 9600)
+ser = serial.Serial('/dev/tty.wchusbserial1410', 9600)
 
 while True:
     data = json.load(urllib2.urlopen(URL))

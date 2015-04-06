@@ -15,6 +15,9 @@
 		],
 		"persistent": false
     },
+	"externally_connectable": {
+	  "matches": ["http://gipzo.by/gallery/index.html"]
+	},
 	"browser_action": {
         "default_icon": { "64": "content/images/64x64.png" },
         "default_title": "Mood Tracker",
@@ -27,7 +30,7 @@
 	],
 	"content_scripts": [
 		{
-		  "matches": ["https://www.google.by/*"],
+		  "matches": ["http://gipzo.by/gallery/index.html"],
 		  "js": ["scripts/thirdPartyScripts/jQuery/jquery-1.9.1.min.js", "scripts/injection/moodTrackerListener.js"]
 		}
    ]

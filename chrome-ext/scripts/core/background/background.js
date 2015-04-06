@@ -47,6 +47,8 @@ MoodTracker.Background.MainClass = MoodTracker.BaseClass.extend({
         this.moodInterface.on('userPictureRefresh', function (data) {
             that._userPictureRefreshEventHandler(data);
         });
+		
+		
     },
 
     _userMoodRefreshEventHandler: function (data) {
